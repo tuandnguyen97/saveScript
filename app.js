@@ -1,3 +1,10 @@
+// Đặt hàm này ở đầu file app.js
+function escapeHTML(str) {
+    const p = document.createElement('p');
+    p.textContent = str;
+    return p.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const templatesList = document.getElementById('templates-list');
     const saveBtn = document.getElementById('save-template-btn');
@@ -21,16 +28,24 @@ document.addEventListener('DOMContentLoaded', () => {
             templatesList.innerHTML = '<p>Chưa có template nào. Hãy thêm một cái mới!</p>';
             return;
         }
-
+    
         templates.forEach((template, index) => {
             const item = document.createElement('div');
             item.className = 'template-item';
+            item.dataset.index = index; // Gán index vào item
+    
+            // Cấu trúc mới cho mỗi item
             item.innerHTML = `
-                <span class="name">${template.name}</span>
-                <div class="actions">
-                    <button class="copy-btn" data-index="${index}">Copy</button>
-                    <button class="edit-btn" data-index="${index}">Sửa</button>
-                    <button class="delete-btn" data-index="${index}">Xóa</button>
+                <div class="template-header">
+                    <span class="name">${escapeHTML(template.name)}</span>
+                    <div class="actions">
+                        <button class="copy-btn" data-index="${index}">Copy</button>
+                        <button class="edit-btn" data-index="${index}">Sửa</button>
+                        <button class="delete-btn" data-index="${index}">Xóa</button>
+                    </div>
+                </div>
+                <div class="template-code-content">
+                    <pre><code>${escapeHTML(template.code)}</code></pre>
                 </div>
             `;
             templatesList.appendChild(item);
@@ -59,32 +74,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sử dụng event delegation để xử lý các nút
     templatesList.addEventListener('click', (e) => {
         const target = e.target;
-        const index = target.dataset.index;
-
-        if (target.classList.contains('delete-btn')) {
-            if (confirm('Bạn có chắc muốn xóa template này?')) {
-                let templates = getTemplates();
-                templates.splice(index, 1);
-                saveTemplates(templates);
-                renderTemplates();
+        
+        // 1. Xử lý click vào các nút actions (Copy, Sửa, Xóa)
+        if (target.closest('.actions')) {
+            const index = target.dataset.index;
+            if (target.classList.contains('delete-btn')) {
+                if (confirm('Bạn có chắc muốn xóa template này?')) {
+                    let templates = getTemplates();
+                    templates.splice(index, 1);
+                    saveTemplates(templates);
+                    renderTemplates();
+                }
+            } else if (target.classList.contains('copy-btn')) {
+                const templates = getTemplates();
+                navigator.clipboard.writeText(templates[index].code).then(() => {
+                    // Thay đổi tạm thời text của nút để phản hồi
+                    target.textContent = 'Đã Copy!';
+                    setTimeout(() => { target.textContent = 'Copy'; }, 1500);
+                });
+            } else if (target.classList.contains('edit-btn')) {
+                alert(`Tính năng edit cho template ${index} đang được phát triển!`);
+            }
+            return; // Dừng xử lý để không bị trigger mở/đóng item
+        }
+    
+        // 2. Xử lý click vào item để mở/đóng dropdown
+        const clickedItem = target.closest('.template-item');
+        if (clickedItem) {
+            // Tìm phần nội dung code tương ứng
+            const content = clickedItem.querySelector('.template-code-content');
+            
+            // Đóng tất cả các item khác trước khi mở item mới
+            document.querySelectorAll('.template-item').forEach(item => {
+                if (item !== clickedItem && item.classList.contains('active')) {
+                    item.classList.remove('active');
+                    item.querySelector('.template-code-content').style.display = 'none';
+                }
+            });
+    
+            // Mở hoặc đóng item được click
+            clickedItem.classList.toggle('active');
+            if (clickedItem.classList.contains('active')) {
+                content.style.display = 'block';
+            } else {
+                content.style.display = 'none';
             }
         }
-
-        if (target.classList.contains('copy-btn')) {
-            const templates = getTemplates();
-            navigator.clipboard.writeText(templates[index].code).then(() => {
-                alert('Đã copy vào clipboard!');
-            }).catch(err => {
-                console.error('Lỗi khi copy: ', err);
-            });
-        }
-        
-        if (target.classList.contains('edit-btn')) {
-             // Logic để edit sẽ phức tạp hơn một chút
-             // Bạn có thể hiện một modal hoặc thay đổi form thêm mới thành form edit
-            alert(`Tính năng edit cho template ${index} đang được phát triển!`);
-        }
     });
+    
 
     closeBtn.addEventListener('click', () => {
         // Gửi thông điệp ra ngoài để trang cha đóng iframe

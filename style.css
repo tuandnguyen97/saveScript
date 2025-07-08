@@ -99,3 +99,45 @@ input[type="text"], textarea {
     cursor: pointer;
     font-size: 16px;
 }
+
+/* Style cho phần header của mỗi template item */
+.template-item .template-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer; /* Thêm con trỏ để người dùng biết có thể click */
+    padding: 15px;
+}
+
+.template-item {
+    /* Thay đổi cấu trúc flex và padding */
+    padding: 0; 
+    flex-direction: column;
+    align-items: stretch;
+    transition: background-color 0.2s ease;
+}
+
+/* Thêm style khi một item được chọn (active) */
+.template-item.active {
+    background-color: #eef5ff;
+}
+
+/* Phần nội dung code, mặc định sẽ ẩn */
+.template-code-content {
+    display: none;
+    padding: 0 15px 15px 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Sử dụng thẻ <pre> và <code> để hiển thị code tốt hơn */
+.template-code-content pre {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 5px;
+    white-space: pre-wrap; /* Giúp code tự xuống dòng nếu quá dài */
+    word-wrap: break-word;
+    margin: 0;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 14px;
+}
